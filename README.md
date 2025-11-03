@@ -8,7 +8,7 @@ Automatização do fluxo de trabalho da **[Sua Empresa]**, consumindo a **API Al
 
 ## 📝 Descrição
 
-Este projeto nasceu da necessidade de controlar e monitorar a produção da empresa de forma mais ágil.
+Este projeto nasceu da necessidade de controlar e monitorar a produção da minha atual empresa de forma mais ágil.
 Ele integra diretamente os dados da API Aloee com nosso banco de dados, permitindo que colaboradores tenham acesso a produtos, modelos e ordens de produção sem precisar entrar manualmente na aplicação oficial.
 
 O sistema foi desenvolvido para centralizar informações, garantir consistência nos dados e facilitar o acompanhamento da produção, tornando o fluxo mais confiável e prático para a equipe.
