@@ -1,0 +1,32 @@
+# --- Arquivos sensíveis ---
+.env
+*.env
+
+# --- Python caches ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- PyInstaller ---
+build/
+dist/
+*.spec
+
+# --- Logs ---
+*.log
+log.txt
+
+# --- IDEs / editores ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Sistema operacional ---
+.DS_Store
+Thumbs.db
+
+# --- Outros ---
+*.egg-info/
+*.egg
+*.pyc
