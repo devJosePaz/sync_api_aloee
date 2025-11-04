@@ -1,6 +1,6 @@
 # SYNC ALOEE
 
-Automatização do fluxo de trabalho da **[Sua Empresa]**, consumindo a **API Aloee** para sincronização de produtos e modelos de produção.
+Automatização de monitoramento da **[Formil Quimica]**, consumindo a **API Aloee** para sincronização de produtos e modelos de produção.
 
 **Link da API utilizada:** [Aloee API v1](https://api.aloee.it/swagger/index.html?urls.primaryName=API%20Aloee%20V1)
 
