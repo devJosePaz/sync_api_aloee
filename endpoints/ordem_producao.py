@@ -5,17 +5,22 @@ def fetch_ordem_producao(page_number=1, page_size=500):
     if not resp or "collection" not in resp or "items" not in resp["collection"]:
         return []
     
-    ordem_procucao = []
+    ordem_producao = []
     for item in ["colecttion"]["items"]:
         data = item.get("data", {})
-        ordem_procucao.append({
+        ordem_producao.append({
             "id": data.get("id"),
             "name": data.get("name"),
             "product_api_id": data.get("productId"),
             "expectedProductionQuantity": data.get("expectedProductionQuantity"),
             "productionQuantityBalance": data.get( "productionQuantityBalance"),
-            "deliveryDate": data.get("deliveryDate")
+            "deliveryDate": data.get("deliveryDate"),
+            "earlyStart": data.get("earlyStart"),
+            "laterEnd": data.get("laterEnd")
         })
+    return ordem_producao
+
+
       
 
    

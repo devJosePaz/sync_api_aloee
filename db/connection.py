@@ -1,4 +1,3 @@
-# db/connection.py
 import pyodbc
 from config import MSSQL_SERVER, MSSQL_DATABASE, MSSQL_USER, MSSQL_PASSWORD
 

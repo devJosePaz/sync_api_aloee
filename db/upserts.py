@@ -1,5 +1,3 @@
-# db/upserts.py
-
 def upsert_product(conn, product):
     """
     Upsert para Produto.
