@@ -6,10 +6,11 @@ from repositories.produto_repository import (
     mark_inactive_missing
 )
 from core.logger import log_info
+from core.utils import normalize_str, normalize_uuid
 
 def sync_produtos(conn, itens_api: list):
     """
-    Faz o sync dos produtos.
+    Faz o sync dos produtos de forma cirúrgica.
     Retorna dict com métricas e mapa IdProdutoAloee -> IdProduto interno.
     """
     log_info("Service: carregando produtos existentes do banco", "info")
@@ -19,10 +20,10 @@ def sync_produtos(conn, itens_api: list):
     inserted = 0
     updated = 0
 
-    # map produto aloee -> id interno
     map_prod_api_to_id = {k: v["IdProduto"] for k, v in existente_map.items()}
-
     alive_ids = []
+
+    campos = ["Descricao", "Unidade", "Dependencia", "IdProdutoDepAloee"]
 
     for item in itens_api:
         id_aloee = item.get("id_aloee")
@@ -33,7 +34,7 @@ def sync_produtos(conn, itens_api: list):
         alive_ids.append(id_aloee)
 
         if id_aloee not in existente_map:
-            # inserir
+            # Inserir novo produto
             try:
                 new_id = insert_produto(conn, item)
                 map_prod_api_to_id[id_aloee] = new_id
@@ -42,17 +43,15 @@ def sync_produtos(conn, itens_api: list):
             except Exception as e:
                 log_info(f"Erro ao inserir produto {id_aloee}: {e}", "error")
         else:
-            # comparar e atualizar somente se necessário (pode-se comparar campo a campo)
+            # Verificar se precisa atualizar
             row = existente_map[id_aloee]
             changed = False
-            # lista simples de campos para comparar
-            campos = ["Descricao", "Unidade", "Dependencia", "IdProdutoDepAloee"]
-            # map de item para formato do banco
+
             banco_vals = {
                 "Descricao": row.get("Descricao"),
                 "Unidade": row.get("Unidade"),
                 "Dependencia": row.get("Dependencia"),
-                "IdProdutoDepAloee": row.get("IdProdutoDepAloee") if row.get("IdProdutoDepAloee") else None
+                "IdProdutoDepAloee": row.get("IdProdutoDepAloee") or None
             }
             item_vals = {
                 "Descricao": item.get("descricao"),
@@ -60,11 +59,23 @@ def sync_produtos(conn, itens_api: list):
                 "Dependencia": item.get("dependencia_nome"),
                 "IdProdutoDepAloee": item.get("dependencia_id_aloee")
             }
+
             for f in campos:
-                # tratar None/""
-                if (banco_vals.get(f) or "") != (item_vals.get(f) or ""):
-                    changed = True
-                    break
+                if f == "IdProdutoDepAloee":
+                    val_banco = normalize_uuid(banco_vals[f])
+                    val_item = normalize_uuid(item_vals[f])
+                    # só conta mudança se já tinha valor no banco e mudou
+                    if val_banco and val_banco != val_item:
+                        log_info(f"Diff detectado no campo '{f}': banco='{val_banco}' | api='{val_item}'", "info")
+                        changed = True
+                        break
+                else:
+                    val_banco = normalize_str(banco_vals[f])
+                    val_item = normalize_str(item_vals[f])
+                    if val_banco != val_item:
+                        log_info(f"Diff detectado no campo '{f}': banco='{val_banco}' | api='{val_item}'", "info")
+                        changed = True
+                        break
 
             if changed:
                 try:
@@ -80,7 +91,7 @@ def sync_produtos(conn, itens_api: list):
                 except Exception as e:
                     log_info(f"Erro ao atualizar produto {id_aloee}: {e}", "error")
 
-    # marcar inativos
+    # Marcar produtos inativos
     try:
         inativados = mark_inactive_missing(conn, alive_ids)
         log_info(f"Produtos marcados como inativos: {inativados}", "info")

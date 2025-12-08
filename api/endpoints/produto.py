@@ -1,10 +1,6 @@
-# api/endpoints/produto.py
 from api.client import client
 
 def fetch_produtos_api():
-    """
-    Retorna lista de dicionários com apenas os campos que vamos usar.
-    """
     itens_agrupados = []
     for page_items in client.paginate("/v1/Product"):
         for entry in page_items:

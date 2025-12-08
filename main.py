@@ -1,10 +1,9 @@
-# main.py
 import traceback
 import time
 from core.db import get_connection
 from core.logger import log_info, write_summary, print_header
 from jobs.produto_job import run_produto_job
-# futuramente: from jobs.modelo_job import run_modelo_job
+from jobs.modelo_producao_job import run_modelo_producao_job
 
 def countdown_close(seconds=5):
     print("\n")
@@ -23,7 +22,6 @@ def main():
 
         # PRODUTOS
         produto_res = run_produto_job(conn)
-        # produto_res contains map and metrics
         metrics["Produtos"] = {
             "total": produto_res.get("total", 0),
             "inseridos": produto_res.get("inseridos", 0),
@@ -32,9 +30,14 @@ def main():
         }
         map_prod_api_to_id = produto_res.get("map_prod_api_to_id", {})
 
-        # AQUI entraria o job de MODELOS que precisa do map_prod_api_to_id
-        # modelo_res = run_modelo_job(conn, map_prod_api_to_id)
-        # metrics["Modelos"] = { ... }
+        # MODELOS DE PRODUÇÃO
+        modelo_res = run_modelo_producao_job(conn, map_prod_api_to_id)
+        metrics["ModelosProducao"] = {
+            "total": modelo_res.get("total", 0),
+            "inseridos": modelo_res.get("inseridos", 0),
+            "atualizados": modelo_res.get("atualizados", 0),
+            "inativados": modelo_res.get("inativados", 0)
+        }
 
         conn.commit()
         log_info("Commit finalizado com sucesso", "info")

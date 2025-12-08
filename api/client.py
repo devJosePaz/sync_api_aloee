@@ -1,4 +1,3 @@
-# api/client.py
 import requests
 from core.config import settings
 from core.logger import log_info
@@ -20,7 +19,6 @@ class AloeeClient:
             r.raise_for_status()
             data = r.json()
             token = None
-            # tenta extrair token de formatos possíveis
             try:
                 token = data["collection"]["items"][0]["data"].get("token")
             except Exception:
@@ -33,12 +31,11 @@ class AloeeClient:
 
     def _get_headers(self):
         token = self.authenticate()
-        headers = {
+        return {
             "Authorization": f"Bearer {token}" if token else "",
             "Accept": "application/json",
             "Content-Type": "application/json"
         }
-        return headers
 
     def get(self, path: str, params: dict = None):
         url = f"{self.base}{path}"
@@ -59,7 +56,6 @@ class AloeeClient:
             data = self.get(path, params=params)
             if not data:
                 break
-            # assume estrutura { "collection": { "items": [...] } }
             items = []
             if isinstance(data, dict) and "collection" in data and "items" in data["collection"]:
                 items = data["collection"]["items"]
@@ -68,15 +64,10 @@ class AloeeClient:
             elif isinstance(data, list):
                 items = data
             else:
-                # sem items -> sai
                 break
-
             if not items:
                 break
-
             yield items
-
-            # se menos que page_size, fim
             if isinstance(items, list) and len(items) < page_size:
                 break
             page += 1
