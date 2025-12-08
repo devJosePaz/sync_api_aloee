@@ -1,6 +1,8 @@
 # --- Arquivos sensíveis ---
 .env
 *.env
+venv/
+.venv/
 
 # --- Python caches ---
 __pycache__/
