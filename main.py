@@ -1,12 +1,12 @@
+# main.py
 import traceback
-from db.connection import get_connection
-from utils.logger import log_info, write_summary, print_header
-from process.produtos_process import process_produtos
-from process.modelos_process import process_modelos
 import time
+from core.db import get_connection
+from core.logger import log_info, write_summary, print_header
+from jobs.produto_job import run_produto_job
+# futuramente: from jobs.modelo_job import run_modelo_job
 
 def countdown_close(seconds=5):
-    """Contagem regressiva antes de fechar o console"""
     print("\n")
     for i in range(seconds, 0, -1):
         print(f"Fechando o console em {i}...", end="\r", flush=True)
@@ -15,45 +15,49 @@ def countdown_close(seconds=5):
 
 def main():
     print_header()
+    conn = None
+    metrics = {}
     try:
         conn = get_connection()
-        log_info("Conexão com banco estabelecida", status="info")
+        log_info("Conexão com banco estabelecida", "info")
 
-        # Processa produtos
-        produtos_total, produtos_inseridos, produtos_atualizados, map_prod_api_to_id = process_produtos(conn)
+        # PRODUTOS
+        produto_res = run_produto_job(conn)
+        # produto_res contains map and metrics
+        metrics["Produtos"] = {
+            "total": produto_res.get("total", 0),
+            "inseridos": produto_res.get("inseridos", 0),
+            "atualizados": produto_res.get("atualizados", 0),
+            "inativados": produto_res.get("inativados", 0)
+        }
+        map_prod_api_to_id = produto_res.get("map_prod_api_to_id", {})
 
-        # Processa modelos
-        modelos_total, modelos_inseridos, modelos_atualizados = process_modelos(conn, map_prod_api_to_id)
+        # AQUI entraria o job de MODELOS que precisa do map_prod_api_to_id
+        # modelo_res = run_modelo_job(conn, map_prod_api_to_id)
+        # metrics["Modelos"] = { ... }
 
         conn.commit()
-        log_info("Commit finalizado com sucesso", status="info")
-        log_info("Sincronização concluída", status="info")
+        log_info("Commit finalizado com sucesso", "info")
+        log_info("Sincronização concluída", "info")
 
-        # Resumo final
-        write_summary(
-            produtos_total=produtos_total,
-            produtos_inseridos=produtos_inseridos,
-            produtos_atualizados=produtos_atualizados,
-            modelos_total=modelos_total,
-            modelos_inseridos=modelos_inseridos,
-            modelos_atualizados=modelos_atualizados
-        )
-
+        write_summary(metrics)
         countdown_close(3)
 
     except Exception as e:
-        log_info(f"ERRO GERAL: {e}", status="error")
-        log_info(traceback.format_exc(), status="error")
+        log_info(f"ERRO GERAL: {e}", "error")
+        log_info(traceback.format_exc(), "error")
         try:
-            conn.rollback()
-            log_info("Rollback executado com sucesso", status="warning")
-        except:
-            log_info("Falha ao executar rollback", status="error")
+            if conn:
+                conn.rollback()
+                log_info("Rollback executado com sucesso", "warning")
+        except Exception:
+            log_info("Falha ao executar rollback", "error")
         finally:
             try:
-                conn.close()
-                log_info("Conexão encerrada", status="info")
-            except:
+                if conn:
+                    conn.close()
+                    log_info("Conexão encerrada", "info")
+            except Exception:
                 pass
 
 if __name__ == "__main__":
