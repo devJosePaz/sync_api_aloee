@@ -4,6 +4,7 @@ from core.db import get_connection
 from core.logger import log_info, write_summary, print_header
 from jobs.produto_job import run_produto_job
 from jobs.modelo_producao_job import run_modelo_producao_job
+from jobs.ordem_producao_job import run_ordem_producao_job
 
 def countdown_close(seconds=5):
     print("\n")
@@ -37,6 +38,15 @@ def main():
             "inseridos": modelo_res.get("inseridos", 0),
             "atualizados": modelo_res.get("atualizados", 0),
             "inativados": modelo_res.get("inativados", 0)
+        }
+
+        # ORDENS DE PRODUÇÃO
+        ordem_res = run_ordem_producao_job(conn, map_prod_api_to_id) 
+        metrics["OrdensProducao"] = {
+            "total": ordem_res.get("total", 0),
+            "inseridos": ordem_res.get("inseridos", 0),
+            "atualizados": ordem_res.get("atualizados", 0),
+            "inativados": ordem_res.get("inativados", 0)
         }
 
         conn.commit()
