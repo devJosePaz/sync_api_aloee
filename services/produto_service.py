@@ -1,4 +1,3 @@
-# services/produto_service.py
 from repositories.produto_repository import (
     fetch_all_produtos,
     insert_produto,
@@ -36,7 +35,7 @@ def sync_produtos(conn, itens_api: list):
         if id_aloee not in existente_map:
             # Inserir novo produto
             try:
-                new_id = insert_produto(conn, item)
+                new_id = insert_produto(conn, item)  # retorna IdProduto interno
                 map_prod_api_to_id[id_aloee] = new_id
                 inserted += 1
                 log_info(f"Produto inserido: {item.get('descricao')} (IdProduto={new_id})", "info")
@@ -64,7 +63,6 @@ def sync_produtos(conn, itens_api: list):
                 if f == "IdProdutoDepAloee":
                     val_banco = normalize_uuid(banco_vals[f])
                     val_item = normalize_uuid(item_vals[f])
-                    # só conta mudança se já tinha valor no banco e mudou
                     if val_banco and val_banco != val_item:
                         log_info(f"Diff detectado no campo '{f}': banco='{val_banco}' | api='{val_item}'", "info")
                         changed = True

@@ -8,7 +8,7 @@ def fetch_all_modelos_producao(conn):
     """
     cur = conn.cursor()
     cur.execute(f"""
-        SELECT IdModeloOrdem, IdModeloOrdemAloee, IdProduto, IdProdutodAloee,
+        SELECT IdModeloOrdem, IdModeloOrdemAloee, IdProduto, IdProdutoAloee,
                Descricao, Cliente, Quantidade, Observacoes, Ativo
         FROM {TABLE}
     """)
@@ -19,7 +19,7 @@ def fetch_all_modelos_producao(conn):
             "IdModeloOrdem": r[0],
             "IdModeloOrdemAloee": r[1],
             "IdProduto": r[2],
-            "IdProdutodAloee": r[3],
+            "IdProdutoAloee": r[3],
             "Descricao": r[4],
             "Cliente": r[5],
             "Quantidade": r[6],
@@ -33,7 +33,7 @@ def insert_modelo_producao(conn, item):
     cur.execute(f"""
         INSERT INTO {TABLE} (
             IdModeloOrdemAloee,
-            IdProdutodAloee,
+            IdProdutoAloee,
             IdProduto,
             Descricao,
             Cliente,
@@ -59,7 +59,7 @@ def update_modelo_producao(conn, item):
     cur.execute(f"""
         UPDATE {TABLE}
         SET
-            IdProdutodAloee = ?,
+            IdProdutoAloee = ?,
             IdProduto = ?,
             Descricao = ?,
             Cliente = ?,
