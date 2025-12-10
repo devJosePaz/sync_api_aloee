@@ -3,6 +3,7 @@ from core.db import get_connection
 
 TABLE = "Al_OrdemProducao"
 
+
 def fetch_all_ordens(conn):
     cur = conn.cursor()
     cur.execute(f"""
@@ -10,7 +11,7 @@ def fetch_all_ordens(conn):
             IdOrdemProducao,
             IdOrdemProducaoAloee,
             IdProduto,
-            IdProdutodAloee,
+            IdProdutoAloee,
             Situacao,
             IgnorarPlanejamento,
             Descricao,
@@ -29,13 +30,14 @@ def fetch_all_ordens(conn):
         FROM {TABLE}
     """)
     rows = cur.fetchall()
+
     result = {}
     for r in rows:
         result[str(r[1])] = {
             "IdOrdemProducao": r[0],
             "IdOrdemProducaoAloee": r[1],
             "IdProduto": r[2],
-            "IdProdutodAloee": r[3],
+            "IdProdutoAloee": r[3],
             "Situacao": r[4],
             "IgnorarPlanejamento": r[5],
             "Descricao": r[6],
@@ -54,13 +56,14 @@ def fetch_all_ordens(conn):
         }
     return result
 
+
 def insert_ordem(conn, item):
     cur = conn.cursor()
     cur.execute(f"""
         INSERT INTO {TABLE} (
             IdOrdemProducaoAloee,
             IdProduto,
-            IdProdutodAloee,
+            IdProdutoAloee,
             Situacao,
             IgnorarPlanejamento,
             Descricao,
@@ -76,10 +79,11 @@ def insert_ordem(conn, item):
             DataPedido,
             Observacoes,
             Ativo
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         item.get("id_aloee"),
-        item.get("id_produto_interno"),
+        item.get("id_produto"),
         item.get("id_produto_aloee"),
         item.get("situacao"),
         item.get("ignorar_planejamento"),
@@ -97,8 +101,12 @@ def insert_ordem(conn, item):
         item.get("observacoes"),
         'S'
     ))
-    cur.execute("SELECT SCOPE_IDENTITY()")
+    
+    # Pega o ID gerado corretamente
+    cur.execute(f"SELECT TOP 1 IdOrdemProducao FROM {TABLE} ORDER BY IdOrdemProducao DESC")
     return cur.fetchone()[0]
+
+
 
 def update_ordem(conn, item):
     cur = conn.cursor()
@@ -106,6 +114,7 @@ def update_ordem(conn, item):
         UPDATE {TABLE}
         SET
             IdProduto = ?,
+            IdProdutoAloee = ?,
             Situacao = ?,
             IgnorarPlanejamento = ?,
             Descricao = ?,
@@ -123,7 +132,8 @@ def update_ordem(conn, item):
             Ativo = ?
         WHERE IdOrdemProducaoAloee = ?
     """, (
-        item.get("id_produto_interno"),
+        item.get("id_produto"),
+        item.get("id_produto_aloee"),
         item.get("situacao"),
         item.get("ignorar_planejamento"),
         item.get("descricao"),
@@ -143,10 +153,15 @@ def update_ordem(conn, item):
     ))
     return cur.rowcount
 
+
 def mark_inactive_missing(conn, alive_aloee_ids):
     if not alive_aloee_ids:
         return 0
+
     placeholders = ",".join("?" for _ in alive_aloee_ids)
     cur = conn.cursor()
-    cur.execute(f"UPDATE {TABLE} SET Ativo='N' WHERE IdOrdemProducaoAloee NOT IN ({placeholders})", alive_aloee_ids)
+    cur.execute(
+        f"UPDATE {TABLE} SET Ativo='N' WHERE IdOrdemProducaoAloee NOT IN ({placeholders})",
+        alive_aloee_ids
+    )
     return cur.rowcount
