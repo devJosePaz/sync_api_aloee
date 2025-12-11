@@ -7,6 +7,7 @@ from jobs.produto_job import run_produto_job
 from jobs.modelo_producao_job import run_modelo_producao_job
 from jobs.ordem_producao_job import run_ordem_producao_job
 from jobs.grupo_recurso_job import run_grupo_recurso_job
+from jobs.ordem_operacao_job import run_ordem_operacao_job
 
 
 def countdown_close(seconds=5):
@@ -59,6 +60,8 @@ def main():
             "atualizados": ordem_res.get("atualizados", 0),
             "inativados": ordem_res.get("inativados", 0)
         }
+        # mapa correto de ordens para o job de operação
+        map_ordem_api_to_id = ordem_res.get("map_api_to_id", {})
 
         # ----------------------------
         # GRUPO DE RECURSO
@@ -69,6 +72,17 @@ def main():
             "inseridos": grupo_res.get("inseridos", 0),
             "atualizados": grupo_res.get("atualizados", 0),
             "inativados": grupo_res.get("inativados", 0)
+        }
+
+        # ----------------------------
+        # ORDENS DE OPERAÇÃO
+        # ----------------------------
+        ordem_ope_res = run_ordem_operacao_job(conn, map_ordem_api_to_id)
+        metrics["OrdensOperacao"] = {
+            "total": ordem_ope_res.get("total", 0),
+            "inseridos": ordem_ope_res.get("inseridos", 0),
+            "atualizados": ordem_ope_res.get("atualizados", 0),
+            "inativados": ordem_ope_res.get("inativados", 0)
         }
 
         # ----------------------------
