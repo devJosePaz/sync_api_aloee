@@ -2,9 +2,12 @@ import traceback
 import time
 from core.db import get_connection
 from core.logger import log_info, write_summary, print_header
+
 from jobs.produto_job import run_produto_job
 from jobs.modelo_producao_job import run_modelo_producao_job
 from jobs.ordem_producao_job import run_ordem_producao_job
+from jobs.grupo_recurso_job import run_grupo_recurso_job
+
 
 def countdown_close(seconds=5):
     print("\n")
@@ -13,15 +16,19 @@ def countdown_close(seconds=5):
         time.sleep(1)
     print("Fechando o console... ✔ ")
 
+
 def main():
     print_header()
     conn = None
     metrics = {}
+
     try:
         conn = get_connection()
         log_info("Conexão com banco estabelecida", "info")
 
+        # ----------------------------
         # PRODUTOS
+        # ----------------------------
         produto_res = run_produto_job(conn)
         metrics["Produtos"] = {
             "total": produto_res.get("total", 0),
@@ -31,7 +38,9 @@ def main():
         }
         map_prod_api_to_id = produto_res.get("map_prod_api_to_id", {})
 
+        # ----------------------------
         # MODELOS DE PRODUÇÃO
+        # ----------------------------
         modelo_res = run_modelo_producao_job(conn, map_prod_api_to_id)
         metrics["ModelosProducao"] = {
             "total": modelo_res.get("total", 0),
@@ -40,7 +49,9 @@ def main():
             "inativados": modelo_res.get("inativados", 0)
         }
 
+        # ----------------------------
         # ORDENS DE PRODUÇÃO
+        # ----------------------------
         ordem_res = run_ordem_producao_job(conn, map_prod_api_to_id) 
         metrics["OrdensProducao"] = {
             "total": ordem_res.get("total", 0),
@@ -49,6 +60,20 @@ def main():
             "inativados": ordem_res.get("inativados", 0)
         }
 
+        # ----------------------------
+        # GRUPO DE RECURSO
+        # ----------------------------
+        grupo_res = run_grupo_recurso_job(conn)
+        metrics["GrupoRecurso"] = {
+            "total": grupo_res.get("total", 0),
+            "inseridos": grupo_res.get("inseridos", 0),
+            "atualizados": grupo_res.get("atualizados", 0),
+            "inativados": grupo_res.get("inativados", 0)
+        }
+
+        # ----------------------------
+        # COMMIT FINAL
+        # ----------------------------
         conn.commit()
         log_info("Commit finalizado com sucesso", "info")
         log_info("Sincronização concluída", "info")
@@ -72,6 +97,7 @@ def main():
                     log_info("Conexão encerrada", "info")
             except Exception:
                 pass
+
 
 if __name__ == "__main__":
     main()
