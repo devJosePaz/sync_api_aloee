@@ -4,13 +4,7 @@ from api.client import client
 def fetch_modelos_api():
     """
     Retorna lista de dicts compatíveis com services/modelo_producao_service.py
-    Campos obrigatórios no dict final:
-      - id_modelo_aloee
-      - id_produto_aloee
-      - descricao
-      - cliente
-      - quantidade
-      - observacoes
+
     """
     itens = []
     for page_items in client.paginate("/v1/ProductionOrderTemplate"):

@@ -1,4 +1,4 @@
-#services/ordem_operacao_service.py
+# services/ordem_operacao_service.py
 from repositories.ordem_operacao_repository import (
     fetch_all_ordens,
     insert_ordem,
@@ -7,19 +7,17 @@ from repositories.ordem_operacao_repository import (
 )
 from repositories.grupo_recurso_repository import fetch_all_grupos
 from core.logger import log_info
-from core.utils import normalize_str, normalize_uuid
+from core.utils import normalize_str
 
-def sync_ordens_operacao(conn, itens_api, map_prod_api_to_id):
+def sync_ordens_operacao(conn, itens_api, map_ordem_api_to_id, map_grupo_api_to_id):
     """
-    Faz o sync das ordens de operação de forma cirúrgica.
-    Retorna dict com métricas e mapa IdOrdemProducaoOpeAloee -> IdOrdemProducaoOpe interno.
+    Sincroniza ordens de operação garantindo duplo mapeamento:
+    IdOrdemProducaoAloee -> IdOrdemProducao
+    IdGrupoRecursoAloee -> IdGrupoRecurso
+    Retorna métricas e mapa {IdOrdemProducaoOpeAloee: IdOrdemProducaoOpe}.
     """
     log_info("Service: carregando ordens existentes do banco", "info")
     existente_map = fetch_all_ordens(conn)  # {id_aloee: {...}}
-
-    # Mapas para resolver IDs internos
-    ordens_producao_map = {k: v["IdOrdemProducao"] for k, v in fetch_all_ordens(conn).items()}
-    grupos_recurso_map = {k: v["IdGrupoRecurso"] for k, v in fetch_all_grupos(conn).items()}
 
     total = len(itens_api)
     inserted = 0
@@ -46,12 +44,20 @@ def sync_ordens_operacao(conn, itens_api, map_prod_api_to_id):
 
         alive_ids.append(id_aloee)
 
+        # Normaliza UUIDs
+        id_ordem_aloee = normalize_str(item.get("id_ordem_producao_aloee"))
+        id_grupo_aloee = normalize_str(item.get("id_grupo_recurso_aloee"))
+
         # Resolver IDs internos
-        id_ordem_interno = map_prod_api_to_id.get(item.get("id_ordem_producao_aloee"))
-        id_grupo_interno = grupos_recurso_map.get(item.get("id_grupo_recurso_aloee"))
+        id_ordem_interno = map_ordem_api_to_id.get(id_ordem_aloee)
+        id_grupo_interno = map_grupo_api_to_id.get(id_grupo_aloee)
 
         if not id_ordem_interno or not id_grupo_interno:
-            log_info(f"IDs internos não encontrados para ordem {id_aloee}", "warning")
+            log_info(
+                f"IDs internos não encontrados para operação {id_aloee} "
+                f"(Ordem={id_ordem_interno}, Grupo={id_grupo_interno})",
+                "warning"
+            )
             continue
 
         if id_aloee not in existente_map:
@@ -69,13 +75,12 @@ def sync_ordens_operacao(conn, itens_api, map_prod_api_to_id):
             changed = False
 
             banco_vals = {f: row.get(f) for f in campos}
-            item_vals = {f: item.get(f.lower()) for f in campos}  # campos da API em snake_case
+            item_vals = {f: item.get(f.lower()) for f in campos}
 
             for f in campos:
                 val_banco = normalize_str(banco_vals[f]) if banco_vals[f] is not None else None
                 val_item = normalize_str(item_vals[f]) if item_vals[f] is not None else None
                 if val_banco != val_item:
-                    log_info(f"Diff detectado no campo '{f}': banco='{val_banco}' | api='{val_item}'", "info")
                     changed = True
                     break
 
@@ -90,7 +95,7 @@ def sync_ordens_operacao(conn, itens_api, map_prod_api_to_id):
     # Marcar ordens inativas
     try:
         inativados = mark_inactive_missing(conn, alive_ids)
-        log_info(f"Ordens marcadas como inativas: {inativados}", "info")
+        log_info(f"Operações marcadas como inativas: {inativados}", "info")
     except Exception as e:
         log_info(f"Erro ao marcar ordens inativas: {e}", "error")
         inativados = 0

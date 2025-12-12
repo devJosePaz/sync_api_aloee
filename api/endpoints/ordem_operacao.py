@@ -1,15 +1,11 @@
 # api/endpoints/ordem_operacao.py
 from api.client import client
 
-def fetch_ordens_operacao_api():
-    """
-    Retorna lista de dicts compatíveis com services/ordem_operacao_service.py
-    """
+def fetch_ordem_operacao_api():
     itens = []
     for page_items in client.paginate("/v1/Operation"):
         for entry in page_items:
             d = entry.get("data", {}) if isinstance(entry, dict) else {}
-            resource_group = d.get("resourceGroup", {})
 
             itens.append({
                 "id_ordem_producao_ope_aloee": d.get("id"),
@@ -40,6 +36,5 @@ def fetch_ordens_operacao_api():
                 "tempo_parada_planejado_real": d.get("effectivePlannedStopTime"),
                 "tempo_parada_nao_planejado_real": d.get("effectiveUnplannedStopTime"),
                 "tempo_setup_real": d.get("effectiveSetupTime"),
-                "id_grupo_recurso": None  # Para ser resolvido no service via map Aloee -> ID interno
             })
     return itens

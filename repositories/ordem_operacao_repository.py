@@ -1,4 +1,4 @@
-#repositories/ordem_operacao_repo.py
+# repositories/ordem_operacao_repository.py
 from core.db import get_connection
 
 TABLE = "Al_OrdemOperacao"
@@ -14,14 +14,11 @@ def fetch_all_ordens(conn):
     TempoProdReal, TempoParadaPlanejadoReal, TempoParadaNaoPlanejadoReal, TempoSetupReal, Ativo
     """
     cur = conn.cursor()
-    cur.execute(f"""
-        SELECT *
-        FROM {TABLE}
-    """)
+    cur.execute(f"SELECT * FROM {TABLE}")
     rows = cur.fetchall()
     result = {}
     for r in rows:
-        result[str(r[1])] = {
+        result[str(r[1])] = {  # IdOrdemProducaoOpeAloee como chave
             "IdOrdemProducaoOpe": r[0],
             "IdOrdemProducaoOpeAloee": r[1],
             "IdOrdemProducao": r[2],
@@ -63,13 +60,11 @@ def get_ordem_by_aloee(conn, id_aloee):
     row = cur.fetchone()
     return row[0] if row else None
 
-def insert_ordem(conn, item, id_ordem_interno, id_grupo_recurso_interno):
-    """
-    item: dict vindo da API (campos conforme endpoint)
-    id_ordem_interno: IdOrdemProducao (int) já resolvido pelo map Aloee -> ID interno
-    id_grupo_recurso_interno: IdGrupoRecurso (int) já resolvido pelo map Aloee -> ID interno
-    """
+def insert_ordem(conn, item, id_ordem_interno, id_grupo_interno):
     cur = conn.cursor()
+    id_ordem_aloee_val = item.get("id_ordem_producao_aloee") or None
+    id_grupo_aloee_val = item.get("id_grupo_recurso_aloee") or None
+
     cur.execute(f"""
         INSERT INTO {TABLE} (
             IdOrdemProducaoOpeAloee,
@@ -107,9 +102,9 @@ def insert_ordem(conn, item, id_ordem_interno, id_grupo_recurso_interno):
     """, (
         item.get("id_ordem_producao_ope_aloee"),
         id_ordem_interno,
-        item.get("id_ordem_producao_aloee"),
-        id_grupo_recurso_interno,
-        item.get("id_grupo_recurso_aloee"),
+        id_ordem_aloee_val,
+        id_grupo_interno,
+        id_grupo_aloee_val,
         item.get("situacao"),
         item.get("descricao"),
         item.get("nivel"),
@@ -140,8 +135,12 @@ def insert_ordem(conn, item, id_ordem_interno, id_grupo_recurso_interno):
     cur.execute("SELECT SCOPE_IDENTITY()")
     return cur.fetchone()[0]
 
-def update_ordem(conn, item, id_ordem_interno, id_grupo_recurso_interno):
+
+def update_ordem(conn, item, id_ordem_interno, id_grupo_interno):
     cur = conn.cursor()
+    id_ordem_aloee_val = item.get("id_ordem_producao_aloee") or None
+    id_grupo_aloee_val = item.get("id_grupo_recurso_aloee") or None
+
     cur.execute(f"""
         UPDATE {TABLE}
         SET
@@ -178,9 +177,9 @@ def update_ordem(conn, item, id_ordem_interno, id_grupo_recurso_interno):
         WHERE IdOrdemProducaoOpeAloee = ?
     """, (
         id_ordem_interno,
-        item.get("id_ordem_producao_aloee"),
-        id_grupo_recurso_interno,
-        item.get("id_grupo_recurso_aloee"),
+        id_ordem_aloee_val,
+        id_grupo_interno,
+        id_grupo_aloee_val,
         item.get("situacao"),
         item.get("descricao"),
         item.get("nivel"),
@@ -211,10 +210,8 @@ def update_ordem(conn, item, id_ordem_interno, id_grupo_recurso_interno):
     ))
     return cur.rowcount
 
+
 def mark_inactive_missing(conn, alive_aloee_ids: list):
-    """
-    Marca como Ativo='N' todos registros cujo IdOrdemProducaoOpeAloee nao estiver na lista alive_aloee_ids.
-    """
     if not alive_aloee_ids:
         return 0
     placeholders = ",".join("?" for _ in alive_aloee_ids)
@@ -222,4 +219,3 @@ def mark_inactive_missing(conn, alive_aloee_ids: list):
     cur = conn.cursor()
     cur.execute(sql, alive_aloee_ids)
     return cur.rowcount
-
