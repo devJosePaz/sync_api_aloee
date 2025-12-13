@@ -8,8 +8,7 @@ from jobs.modelo_producao_job import run_modelo_producao_job
 from jobs.ordem_producao_job import run_ordem_producao_job
 from jobs.grupo_recurso_job import run_grupo_recurso_job
 from jobs.ordem_operacao_job import run_ordem_operacao_job
-from repositories.grupo_recurso_repository import fetch_all_grupos
-from api.endpoints.ordem_operacao import fetch_ordem_operacao_api  # pegar itens da API
+
 
 def countdown_close(seconds=5):
     print("\n")
@@ -17,6 +16,7 @@ def countdown_close(seconds=5):
         print(f"Fechando o console em {i}...", end="\r", flush=True)
         time.sleep(1)
     print("Fechando o console... ✔ ")
+
 
 def main():
     print_header()
@@ -61,9 +61,6 @@ def main():
             "inativados": ordem_res.get("inativados", 0)
         }
 
-        # Mapa correto para uso na operação
-        map_ordem_api_to_id = ordem_res.get("map_api_to_id", {})
-
         # ----------------------------
         # GRUPO DE RECURSO
         # ----------------------------
@@ -75,19 +72,10 @@ def main():
             "inativados": grupo_res.get("inativados", 0)
         }
 
-        # Criar mapa de grupos para a operação
-        map_grupo_api_to_id = fetch_all_grupos(conn)
-
         # ----------------------------
         # ORDENS DE OPERAÇÃO
         # ----------------------------
-        # Buscar itens da API
-        itens_ordem_operacao = fetch_ordem_operacao_api()
-        ordem_ope_res = run_ordem_operacao_job(
-            itens_ordem_operacao,
-            map_ordem_api_to_id,
-            map_grupo_api_to_id
-        )
+        ordem_ope_res = run_ordem_operacao_job(conn)
         metrics["OrdensOperacao"] = {
             "total": ordem_ope_res.get("total", 0),
             "inseridos": ordem_ope_res.get("inseridos", 0),
@@ -120,6 +108,7 @@ def main():
                 log_info("Conexão encerrada", "info")
             except Exception as close_err:
                 log_info(f"Falha ao fechar conexão: {close_err}", "error")
+
 
 if __name__ == "__main__":
     main()
