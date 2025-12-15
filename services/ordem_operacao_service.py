@@ -40,6 +40,13 @@ def sync_ordens_operacao(
     map_ordem_producao,
     map_grupo_recurso,
 ):
+    # Lógica de sincronização
+    ...
+
+    """
+    Sincroniza ordens de operação usando apenas IDs inteiros do banco para FKs.
+    UUIDs da API são mantidos apenas como referência (não como FK).
+    """
     existentes = fetch_all_ordens_operacao(conn)
 
     total = 0
@@ -49,34 +56,17 @@ def sync_ordens_operacao(
     for item in itens_api:
         total += 1
 
-        # 🔴 CHAVES CORRETAS — iguais às do endpoint
         uuid_op = item.get("id_ordem_producao_ope_aloee")
+        id_ordem = item.get("IdOrdemProducao")       # INT do banco
+        id_grupo = item.get("IdGrupoRecurso")        # INT do banco
         uuid_ordem = item.get("id_ordem_producao_aloee")
         uuid_grupo = item.get("id_grupo_recurso_aloee")
 
-        if not uuid_op or not uuid_ordem or not uuid_grupo:
-            log_info(
-                f"Pulando OrdemOperacao — IDs inválidos: "
-                f"op={uuid_op}, ordem={uuid_ordem}, grupo={uuid_grupo}",
-                "warning",
-            )
-            continue
-
-        ordem = map_ordem_producao.get(uuid_ordem)
-        grupo = map_grupo_recurso.get(uuid_grupo)
-
-        if not ordem or not grupo:
-            log_info(
-                f"Pulando OrdemOperacao {uuid_op} — FK não resolvida",
-                "warning",
-            )
-            continue
-
         payload = {
             "IdOrdemProducaoOpeAloee": uuid_op,
-            "IdOrdemProducao": ordem["IdOrdemProducao"],
+            "IdOrdemProducao": id_ordem,
             "IdOrdemProducaoAloee": uuid_ordem,
-            "IdGrupoRecurso": grupo["IdGrupoRecurso"],
+            "IdGrupoRecurso": id_grupo,
             "IdGrupoRecursoAloee": uuid_grupo,
             "Ativo": "S",
         }
@@ -98,18 +88,10 @@ def sync_ordens_operacao(
                 diff[campo] = payload[campo]
 
         if diff:
-            update_ordem_operacao(
-                conn,
-                existente["IdOrdemProducaoOpe"],
-                diff,
-            )
+            update_ordem_operacao(conn, existente["IdOrdemProducaoOpe"], diff)
             atualizados += 1
-            log_info(
-                f"Atualizada OrdemOperacao {uuid_op} — {list(diff.keys())}",
-                "info",
-            )
+            log_info(f"Atualizada OrdemOperacao {uuid_op} — {list(diff.keys())}", "info")
 
-    # 🔵 RETORNO OBRIGATÓRIO PRO JOB / MAIN
     return {
         "total": total,
         "inseridos": inseridos,
