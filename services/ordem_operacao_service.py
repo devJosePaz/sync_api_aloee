@@ -33,26 +33,18 @@ MAP_CAMPO_ITEM = {
     "TempoSetupReal": "tempo_setup_real",
 }
 
-
-def sync_ordens_operacao(
-    conn,
-    itens_api,
-    map_ordem_producao,
-    map_grupo_recurso,
-):
+def sync_ordens_operacao(conn, itens_api, map_ordem_producao, map_grupo_recurso):
     """
     Sincroniza Ordens de Operação.
-    - Resolve FKs exclusivamente via mapas internos
-    - Nunca insere FK inválida
+    - Resolve FKs via mapas internos
+    - Nunca ignora registros da API, mesmo com FK ausente
     - UUID Aloee é apenas referência externa
     """
-
     existentes = fetch_all_ordens_operacao(conn)
 
     total = 0
     inseridos = 0
     atualizados = 0
-    ignorados = 0
 
     for item in itens_api:
         total += 1
@@ -61,31 +53,26 @@ def sync_ordens_operacao(
         uuid_ordem = item.get("id_ordem_producao_aloee")
         uuid_grupo = item.get("id_grupo_recurso_aloee")
 
-        # 🔑 RESOLUÇÃO DAS FKs (OBRIGATÓRIA)
         ordem_row = map_ordem_producao.get(uuid_ordem)
         grupo_row = map_grupo_recurso.get(uuid_grupo)
 
-        nome_ordem = ordem_row.get("Descricao") if ordem_row else None
-        nome_grupo = grupo_row.get("Descricao") if grupo_row else None
+        id_ordem = ordem_row["IdOrdemProducao"] if ordem_row else None
+        id_grupo = grupo_row["IdGrupoRecurso"] if grupo_row else None
 
+        # Log quando FK não existe, mas não bloqueia inserção
         if not ordem_row:
+            nome_ordem = item.get("descricao") or "SEM_NOME"
             log_info(
-                f"[IGNORADO] OrdemOperacao {uuid_op} — OrdemProducao não encontrada (UUID={uuid_ordem})",
+                f"[ATENÇÃO] OrdemOperacao {uuid_op} — OrdemProducao não encontrada. Nome: {nome_ordem} (UUID={uuid_ordem})",
                 "warning",
             )
-            ignorados += 1
-            continue
 
         if not grupo_row:
+            nome_grupo = item.get("grupo") or "SEM_GRUPO"
             log_info(
-                f"[IGNORADO] OrdemOperacao {uuid_op} — GrupoRecurso não encontrado (UUID={uuid_grupo})",
+                f"[ATENÇÃO] OrdemOperacao {uuid_op} — GrupoRecurso não encontrado. Nome: {nome_grupo} (UUID={uuid_grupo})",
                 "warning",
             )
-            ignorados += 1
-            continue
-
-        id_ordem = ordem_row["IdOrdemProducao"]
-        id_grupo = grupo_row["IdGrupoRecurso"]
 
         payload = {
             "IdOrdemProducaoOpeAloee": uuid_op,
@@ -107,7 +94,10 @@ def sync_ordens_operacao(
         if not existente:
             insert_ordem_operacao(conn, payload)
             inseridos += 1
-            log_info(f"Inserida OrdemOperacao {nome_ordem} / {nome_grupo} ({uuid_op})", "info")
+            log_info(
+                f"Inserida OrdemOperacao {uuid_op} / {item.get('descricao','SEM_NOME')} ({uuid_op})",
+                "info",
+            )
             continue
 
         # -----------------------
@@ -122,7 +112,7 @@ def sync_ordens_operacao(
             update_ordem_operacao(conn, existente["IdOrdemProducaoOpe"], diff)
             atualizados += 1
             log_info(
-                f"Atualizada OrdemOperacao {nome_ordem} / {nome_grupo} ({uuid_op}) — campos: {list(diff.keys())}",
+                f"Atualizada OrdemOperacao {uuid_op} — campos: {list(diff.keys())}",
                 "info",
             )
 
@@ -130,6 +120,5 @@ def sync_ordens_operacao(
         "total": total,
         "inseridos": inseridos,
         "atualizados": atualizados,
-        "ignorados": ignorados,
         "inativados": 0,
     }
