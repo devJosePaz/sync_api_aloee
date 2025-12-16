@@ -36,9 +36,12 @@ MAP_CAMPO_ITEM = {
 def sync_ordens_operacao(conn, itens_api, map_ordem_producao, map_grupo_recurso):
     """
     Sincroniza Ordens de Operação.
-    - Resolve FKs via mapas internos
-    - Nunca ignora registros da API, mesmo com FK ausente
+
+    Regras:
+    - OrdemOperacao PODE existir sem OrdemProducao
+    - GrupoRecurso PODE ser nulo
     - UUID Aloee é apenas referência externa
+    - Ausência de FK NÃO é erro e NÃO gera log
     """
     existentes = fetch_all_ordens_operacao(conn)
 
@@ -58,21 +61,6 @@ def sync_ordens_operacao(conn, itens_api, map_ordem_producao, map_grupo_recurso)
 
         id_ordem = ordem_row["IdOrdemProducao"] if ordem_row else None
         id_grupo = grupo_row["IdGrupoRecurso"] if grupo_row else None
-
-        # Log quando FK não existe, mas não bloqueia inserção
-        if not ordem_row:
-            nome_ordem = item.get("descricao") or "SEM_NOME"
-            log_info(
-                f"[ATENÇÃO] OrdemOperacao {uuid_op} — OrdemProducao não encontrada. Nome: {nome_ordem} (UUID={uuid_ordem})",
-                "warning",
-            )
-
-        if not grupo_row:
-            nome_grupo = item.get("grupo") or "SEM_GRUPO"
-            log_info(
-                f"[ATENÇÃO] OrdemOperacao {uuid_op} — GrupoRecurso não encontrado. Nome: {nome_grupo} (UUID={uuid_grupo})",
-                "warning",
-            )
 
         payload = {
             "IdOrdemProducaoOpeAloee": uuid_op,
@@ -95,7 +83,7 @@ def sync_ordens_operacao(conn, itens_api, map_ordem_producao, map_grupo_recurso)
             insert_ordem_operacao(conn, payload)
             inseridos += 1
             log_info(
-                f"Inserida OrdemOperacao {uuid_op} / {item.get('descricao','SEM_NOME')} ({uuid_op})",
+                f"Inserida OrdemOperacao {uuid_op} / {item.get('descricao','SEM_NOME')}",
                 "info",
             )
             continue
