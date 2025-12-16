@@ -9,7 +9,13 @@ def fetch_all_produtos(conn):
     """
     cur = conn.cursor()
     cur.execute(f"""
-        SELECT IdProduto, IdProdutoAloee, Descricao, Unidade, IdProdutoDep, Ativo
+        SELECT 
+            IdProduto,
+            IdProdutoAloee,
+            Descricao,
+            Unidade,
+            IdProdutoDep,
+            Ativo
         FROM {TABLE}
     """)
     rows = cur.fetchall()
@@ -25,59 +31,84 @@ def fetch_all_produtos(conn):
         }
     return result
 
+
 def get_produto_by_aloee(conn, id_aloee):
     cur = conn.cursor()
-    cur.execute(f"SELECT IdProduto FROM {TABLE} WHERE IdProdutoAloee = ?", id_aloee)
+    cur.execute(
+        f"SELECT IdProduto FROM {TABLE} WHERE IdProdutoAloee = ?",
+        id_aloee
+    )
     row = cur.fetchone()
     return row[0] if row else None
 
+
 def insert_produto(conn, item, map_prod_api_to_id):
     """
-    Insere produto. Usa IdProduto interno da dependência se existir.
+    Insere produto.
+    - Usa IdProduto interno da dependência se existir
+    - Persiste UUID da dependência (IdProdutoDepAloee)
+    - Persiste descrição da dependência (Dependencia)
     """
     dep_interno = map_prod_api_to_id.get(item.get("dependencia_id_aloee"))
+
     cur = conn.cursor()
     cur.execute(f"""
         INSERT INTO {TABLE} (
             IdProdutoAloee,
             IdProdutoDep,
+            IdProdutoDepAloee,
             CodMaterial,
             Descricao,
+            Dependencia,
             Unidade,
             Ativo
-        ) VALUES (?, ?, NULL, ?, ?, ?)
+        )
+        VALUES (?, ?, ?, NULL, ?, ?, ?, ?)
     """, (
         item.get("id_aloee"),
-        dep_interno,  # Pode ser None se dependência ainda não existir
+        dep_interno,                               # FK interna (pode ser NULL)
+        item.get("dependencia_id_aloee"),          # UUID da dependência (legado)
         item.get("descricao"),
+        item.get("dependencia_descricao"),         # Descrição legível
         item.get("unidade"),
         'S'
     ))
+
     cur.execute("SELECT SCOPE_IDENTITY()")
     return cur.fetchone()[0]
 
+
 def update_produto(conn, item, map_prod_api_to_id):
     """
-    Atualiza produto. Usa IdProduto interno da dependência se existir.
+    Atualiza produto.
+    - Mantém lógica atual
+    - Atualiza campos legados de dependência
     """
     dep_interno = map_prod_api_to_id.get(item.get("dependencia_id_aloee"))
+
     cur = conn.cursor()
     cur.execute(f"""
         UPDATE {TABLE}
         SET
             IdProdutoDep = ?,
+            IdProdutoDepAloee = ?,
+            Dependencia = ?,
             Descricao = ?,
             Unidade = ?,
             Ativo = ?
         WHERE IdProdutoAloee = ?
     """, (
-        dep_interno,
+        dep_interno,                               # FK interna
+        item.get("dependencia_id_aloee"),          # UUID dependência
+        item.get("dependencia_descricao"),         # Descrição legível
         item.get("descricao"),
         item.get("unidade"),
         'S',
         item.get("id_aloee")
     ))
+
     return cur.rowcount
+
 
 def mark_inactive_missing(conn, alive_aloee_ids: list):
     """
@@ -85,8 +116,14 @@ def mark_inactive_missing(conn, alive_aloee_ids: list):
     """
     if not alive_aloee_ids:
         return 0
+
     placeholders = ",".join("?" for _ in alive_aloee_ids)
-    sql = f"UPDATE {TABLE} SET Ativo='N' WHERE IdProdutoAloee NOT IN ({placeholders})"
+    sql = f"""
+        UPDATE {TABLE}
+        SET Ativo = 'N'
+        WHERE IdProdutoAloee NOT IN ({placeholders})
+    """
+
     cur = conn.cursor()
     cur.execute(sql, alive_aloee_ids)
     return cur.rowcount

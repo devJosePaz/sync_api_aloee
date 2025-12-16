@@ -1,3 +1,4 @@
+#api/endpoints/produto.py
 from api.client import client
 
 def fetch_produtos_api():

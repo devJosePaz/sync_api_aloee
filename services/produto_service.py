@@ -7,6 +7,7 @@ from repositories.produto_repository import (
 from core.logger import log_info
 from core.utils import normalize_str
 
+
 def sync_produtos(conn, itens_api: list):
     """
     Faz o sync dos produtos de forma segura.
@@ -21,7 +22,8 @@ def sync_produtos(conn, itens_api: list):
     map_prod_api_to_id = {k: v["IdProduto"] for k, v in existente_map.items()}
     alive_ids = []
 
-    campos = ["Descricao", "Unidade", "Dependencia"]
+    # Somente campos relevantes para decidir UPDATE
+    campos_diff = ["Descricao", "Unidade"]
 
     for item in itens_api:
         id_aloee = item.get("id_aloee")
@@ -31,19 +33,49 @@ def sync_produtos(conn, itens_api: list):
 
         alive_ids.append(id_aloee)
 
-        # Mapear dependência para IdProduto interno (pode ser None)
-        item_dependencia_id = item.get("dependencia_id_aloee")
-        dep_interno = map_prod_api_to_id.get(item_dependencia_id) if item_dependencia_id else None
-        item["dependencia_id_interno"] = dep_interno
+        # ----------------------------
+        # DEPENDÊNCIA (RESOLUÇÃO RELACIONAL)
+        # ----------------------------
 
+        dependencia_id_aloee = item.get("dependencia_id_aloee")
+
+        # FK interna
+        dep_interno = (
+            map_prod_api_to_id.get(dependencia_id_aloee)
+            if dependencia_id_aloee
+            else None
+        )
+
+        # Resolve o NOME DA DEPENDÊNCIA VIA TABELA (não via API)
+        dependencia_descricao = None
+        if dep_interno:
+            for v in existente_map.values():
+                if v["IdProduto"] == dep_interno:
+                    dependencia_descricao = v["Descricao"]
+                    break
+
+        # Campos que o repository espera
+        item["dependencia_id_aloee"] = dependencia_id_aloee
+        item["dependencia_descricao"] = dependencia_descricao
+
+        # ----------------------------
+        # INSERT
+        # ----------------------------
         if id_aloee not in existente_map:
             try:
                 new_id = insert_produto(conn, item, map_prod_api_to_id)
                 map_prod_api_to_id[id_aloee] = new_id
                 inserted += 1
-                log_info(f"Produto inserido: {item.get('descricao')} (IdProduto={new_id})", "info")
+                log_info(
+                    f"Produto inserido: {item.get('descricao')} (IdProduto={new_id})",
+                    "info"
+                )
             except Exception as e:
                 log_info(f"Erro ao inserir produto {id_aloee}: {e}", "error")
+
+        # ----------------------------
+        # UPDATE
+        # ----------------------------
         else:
             row = existente_map[id_aloee]
             changed = False
@@ -51,30 +83,44 @@ def sync_produtos(conn, itens_api: list):
             banco_vals = {
                 "Descricao": row.get("Descricao"),
                 "Unidade": row.get("Unidade"),
-                "Dependencia": row.get("Dependencia")
             }
+
             item_vals = {
                 "Descricao": item.get("descricao"),
                 "Unidade": item.get("unidade"),
-                "Dependencia": dep_interno
             }
 
-            for f in campos:
-                val_banco = normalize_str(banco_vals[f]) if f != "Dependencia" else banco_vals[f]
-                val_item = normalize_str(item_vals[f]) if f != "Dependencia" else item_vals[f]
+            for f in campos_diff:
+                val_banco = normalize_str(banco_vals[f])
+                val_item = normalize_str(item_vals[f])
                 if val_banco != val_item:
-                    log_info(f"Diff detectado no campo '{f}': banco='{val_banco}' | api='{val_item}'", "info")
+                    log_info(
+                        f"Diff detectado no campo '{f}': "
+                        f"banco='{val_banco}' | api='{val_item}'",
+                        "info"
+                    )
                     changed = True
                     break
 
-            if changed:
+            # UPDATE acontece se:
+            # - houve diff real
+            # OU
+            # - existe dependência resolvida (para garantir persistência dos campos legados)
+            if changed or dep_interno:
                 try:
                     update_produto(conn, item, map_prod_api_to_id)
                     updated += 1
-                    log_info(f"Produto atualizado: {item.get('descricao')} (IdProdutoAloee={id_aloee})", "info")
+                    log_info(
+                        f"Produto atualizado: {item.get('descricao')} "
+                        f"(IdProdutoAloee={id_aloee})",
+                        "info"
+                    )
                 except Exception as e:
                     log_info(f"Erro ao atualizar produto {id_aloee}: {e}", "error")
 
+    # ----------------------------
+    # INATIVAÇÃO
+    # ----------------------------
     try:
         inativados = mark_inactive_missing(conn, alive_ids)
         log_info(f"Produtos marcados como inativos: {inativados}", "info")

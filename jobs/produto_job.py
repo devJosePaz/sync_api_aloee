@@ -1,3 +1,4 @@
+#jobs/produto_job.py
 from api.endpoints.produto import fetch_produtos_api
 from services.produto_service import sync_produtos
 from core.logger import log_info
