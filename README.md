@@ -15,7 +15,7 @@ O sistema foi desenvolvido para centralizar informações, garantir consistênci
 
 Este projeto foi desenvolvido para:
 
-- Sincronizar e atualizar os dados da aplicação da API Aloee com o banco interno da empresa.
+- Sincronizar e atualizar os dados da API da aplicação Aloee com o banco interno da empresa.
 - Registrar logs detalhados de execução, incluindo resumo final.
 - Evitar inconsistências no banco de dados com upserts e controle de status ativo/inativo.
 
