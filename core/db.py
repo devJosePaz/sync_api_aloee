@@ -13,7 +13,9 @@ def get_connection():
     f"UID={settings.MSSQL_USER};"
     f"PWD={settings.MSSQL_PASSWORD};"
     "TrustServerCertificate=yes;"
+    "Network=DBMSSOCN;"
     )
+
 
 
     return pyodbc.connect(conn_str, autocommit=False)

@@ -1,8 +1,16 @@
-# core/config.py
 from dotenv import load_dotenv
 import os
+import sys
 
-load_dotenv()
+# Detecta se está rodando dentro do PyInstaller
+if getattr(sys, 'frozen', False):
+    # Caminho do executável
+    base_path = sys._MEIPASS
+else:
+    base_path = os.path.dirname(__file__)
+
+env_path = os.path.join(base_path, ".env")
+load_dotenv(dotenv_path=env_path)
 
 class Settings:
     ALOEE_USER = os.getenv("ALOEE_USER")
@@ -18,3 +26,6 @@ class Settings:
     MSSQL_DRIVER = os.getenv("MSSQL_DRIVER", "ODBC Driver 17 for SQL Server")
 
 settings = Settings()
+
+# DEBUG: mostrar variáveis para checar se estão corretas
+print("MSSQL_SERVER =", settings.MSSQL_SERVER)

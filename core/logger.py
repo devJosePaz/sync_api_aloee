@@ -3,7 +3,15 @@ from datetime import datetime
 import os
 import sys
 
-BASE_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+def get_base_dir():
+    # Quando for .exe
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+
+    # Quando for script normal
+    return os.path.dirname(os.path.abspath(sys.argv[0]))
+
+BASE_DIR = get_base_dir()
 log_path = os.path.join(BASE_DIR, "log.txt")
 
 # colorama opcional
