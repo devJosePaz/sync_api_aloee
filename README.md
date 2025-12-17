@@ -18,7 +18,7 @@ Atualmente, o sistema consome os seguintes endpoints da API:
 - /v1/ProductionOrder
 - /v1/Product
 
-O projeto foi pensado para permitir a adição novos pipelines, consumindo outros endpoints da API conforme a necessário.
+O projeto foi pensado para permitir a adição de novos pipelines, consumindo outros endpoints da API conforme a necessário.
 
 Ele centraliza os dados, garantindo consistência e confiabilidade, e facilita o acompanhamento da produção em tempo real, reduzindo erros e retrabalho.
 
@@ -26,7 +26,7 @@ As principais funcionalidades do projeto incluem:
 
 - Sincronização de dados: atualiza produtos, modelos de produção, ordens e grupos de recurso da API Aloee no banco interno.
 
-- Registro de logs detalhados: mantém histórico de execuções, incluindo re
+- Registro de logs detalhados: mantém histórico completo de execuções, incluindo resumo final e status de cada operação.
 
 - Controle de consistência: evita duplicidades ou dados inconsistentes usando upserts e gerenciamento de status ativo/inativo.
 
