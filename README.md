@@ -1,6 +1,6 @@
 # SYNC ALOEE
 
-Automatização do fluxo de trabalho da **[Formil Química]**, consumindo a **API Aloee** para sincronização de produtos e modelos de produção.
+Automatização do fluxo de trabalho da **Formil Química**, consumindo a **API Aloee** para sincronização de dados da aplicação Aloee com o banco de dados interno.
 
 **Link da API utilizada:** [Aloee API v1](https://api.aloee.it/swagger/index.html?urls.primaryName=API%20Aloee%20V1)
 
@@ -8,26 +8,28 @@ Automatização do fluxo de trabalho da **[Formil Química]**, consumindo a **AP
 
 ## 📝 Descrição
 
-Este projeto nasceu da necessidade de controlar e monitorar a produção da minha atual empresa de forma mais ágil.
-Ele integra diretamente os dados da API Aloee com nosso banco de dados, permitindo que colaboradores tenham acesso a produtos, modelos e ordens de produção sem precisar entrar manualmente na aplicação oficial.
+Este projeto foi criado para otimizar o controle e monitoramento da produção da empresa, automatizando a integração entre a API Aloee e o banco de dados interno. Com isso, a equipe de TI e outros setores conseguem acessar informações atualizadas de produtos, modelos de produção, ordens e grupos de recursos sem a necessidade de consultar manualmente a aplicação oficial.
 
-O sistema foi desenvolvido para centralizar informações, garantir consistência nos dados e facilitar o acompanhamento da produção, tornando o fluxo mais confiável e prático para a equipe.
+O sistema centraliza os dados, garantindo consistência, confiabilidade e rastreabilidade, e facilita o acompanhamento da produção em tempo real, reduzindo erros e retrabalho.
 
-Este projeto foi desenvolvido para:
+As principais funcionalidades do projeto incluem:
 
-- Sincronizar e atualizar os dados da API da aplicação Aloee com o banco interno da empresa.
-- Registrar logs detalhados de execução, incluindo resumo final.
-- Evitar inconsistências no banco de dados com upserts e controle de status ativo/inativo.
+- Sincronização de dados: atualiza produtos, modelos de produção, ordens e grupos de recurso da API Aloee no banco interno.
+
+- Registro de logs detalhados: mantém histórico de execuções, incluindo resumo final e status de cada operação.
+
+- Controle de consistência: evita duplicidades ou dados inconsistentes usando upserts e gerenciamento de status ativo/inativo.
+
+- Flexibilidade e confiabilidade: permite execução automática ou manual do processo, garantindo que os dados estejam sempre atualizados.
 
 ---
 
 ## ⚙️ Pré-requisitos
 
-Antes de executar o projeto, certifique-se de ter:
+Antes de executar o projeto, certifique-se de que:
 
-- Python 3.11+ instalado (para rodar via script).
-- Todas as libs em 'requirements.txt'.
-
+- Python 3.11+ instalado.
+- Todas as dependências listadas em requirements.txt foram instaladas:
 ---
 
 ## 🚀 Como executar
