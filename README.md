@@ -8,15 +8,25 @@ Automatização do fluxo de trabalho da **Formil Química**, consumindo a **API 
 
 ## 📝 Descrição
 
-Este projeto foi criado para otimizar o controle e monitoramento da produção da empresa, automatizando a integração entre a API Aloee e o banco de dados interno. Com isso, a equipe de TI e outros setores conseguem acessar informações atualizadas de produtos, modelos de produção, ordens e grupos de recursos sem a necessidade de consultar manualmente a aplicação oficial.
+Este projeto foi feito para facilitar o controle e acompanhamento da produção, integrando automaticamente os dados da API Aloee com o banco interno. Com isso, a equipe de TI e outros setores conseguem acessar informações atualizadas de produtos, modelos de produção, ordens e grupos de recursos sem precisar abrir a aplicação oficial.
 
-O sistema centraliza os dados, garantindo consistência, confiabilidade e rastreabilidade, e facilita o acompanhamento da produção em tempo real, reduzindo erros e retrabalho.
+Atualmente, o sistema consome os seguintes endpoints da API:
+
+- /v1/ResourceGroup
+- /v1/ProductionOrderTemplate
+- /v1/Operation
+- /v1/ProductionOrder
+- /v1/Product
+
+O projeto foi pensado para permitir a adição novos pipelines, consumindo outros endpoints da API conforme a necessário.
+
+Ele centraliza os dados, garantindo consistência e confiabilidade, e facilita o acompanhamento da produção em tempo real, reduzindo erros e retrabalho.
 
 As principais funcionalidades do projeto incluem:
 
 - Sincronização de dados: atualiza produtos, modelos de produção, ordens e grupos de recurso da API Aloee no banco interno.
 
-- Registro de logs detalhados: mantém histórico de execuções, incluindo resumo final e status de cada operação.
+- Registro de logs detalhados: mantém histórico de execuções, incluindo re
 
 - Controle de consistência: evita duplicidades ou dados inconsistentes usando upserts e gerenciamento de status ativo/inativo.
 
