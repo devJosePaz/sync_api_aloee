@@ -21,7 +21,7 @@ Este projeto foi desenvolvido para:
 
 ---
 
-⚙️ Pré-requisitos
+## ⚙️ Pré-requisitos
 
 Antes de executar o projeto, certifique-se de ter:
 Python 3.11+ instalado (para rodar via script).
@@ -31,7 +31,7 @@ Acesso ao banco SQL Server e à API Aloee.
 
 ---
 
-🚀 Como executar
+## 🚀 Como executar
 
 Via Python (para desenvolvimento)
 
@@ -44,14 +44,13 @@ python main.py
 
 Gerando o executável (.exe)
 
-pyinstaller --onefile --name sync_aloee --console --add-data ".env;." main.py
-O .exe será gerado na pasta dist/ e poderá ser executado diretamente no Windows:
+    pyinstaller --onefile --name sync_aloee --console --add-data ".env;." main.py
 
-    sync_aloee.exe
+O .exe será gerado na pasta dist/ e poderá ser executado diretamente no Windows.
 
 ---
 
-🛠️ Observações
+## 🛠️ Observações
 
 Sempre mantenha o .env atualizado com as credenciais corretas.
 Sempre que fizer uma nova alteração no código, faça outro .exe
