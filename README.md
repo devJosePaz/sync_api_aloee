@@ -25,9 +25,7 @@ Este projeto foi desenvolvido para:
 
 Antes de executar o projeto, certifique-se de ter:
 Python 3.11+ instalado (para rodar via script).
-PyInstaller (para gerar o .exe caso necessário).
-O driver ODBC Driver 17 for SQL Server instalado na máquina.
-Acesso ao banco SQL Server e à API Aloee.
+Todas as libs em 'requitements.txt'
 
 ---
 
@@ -35,10 +33,10 @@ Acesso ao banco SQL Server e à API Aloee.
 
 Via Python (para desenvolvimento)
 
-python -m venv venv
-venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-python main.py
+    python -m venv venv
+    venv\Scripts\activate  # Windows
+    pip install -r requirements.txt
+    python main.py
 
 ---
 
