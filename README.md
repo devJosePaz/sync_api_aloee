@@ -20,3 +20,43 @@ Este projeto foi desenvolvido para:
 - Evitar inconsistências no banco de dados com upserts e controle de status ativo/inativo.
 
 ---
+
+⚙️ Pré-requisitos
+
+Antes de executar o projeto, certifique-se de ter:
+Python 3.11+ instalado (para rodar via script).
+PyInstaller (para gerar o .exe caso necessário).
+O driver ODBC Driver 17 for SQL Server instalado na máquina.
+Acesso ao banco SQL Server e à API Aloee.
+
+---
+
+🚀 Como executar
+
+Via Python (para desenvolvimento)
+
+python -m venv venv
+venv\Scripts\activate  # Windows
+pip install -r requirements.txt
+python main.py
+
+---
+
+Gerando o executável (.exe)
+
+pyinstaller --onefile --name sync_aloee --console --add-data ".env;." main.py
+O .exe será gerado na pasta dist/ e poderá ser executado diretamente no Windows:
+
+    sync_aloee.exe
+
+---
+
+🛠️ Observações
+
+Sempre mantenha o .env atualizado com as credenciais corretas.
+Sempre que fizer uma nova alteração no código, faça outro .exe
+Certifique-se de que a porta do SQL Server esteja aberta e que a conexão seja permitida.
+Para problemas de conexão (08001 ou 11001), verifique IP, porta e firewall.
+
+
+
