@@ -3,13 +3,19 @@ import os
 import sys
 
 # Detecta se está rodando dentro do PyInstaller
-if getattr(sys, 'frozen', False):
-    # Caminho do executável
+if getattr(sys, "frozen", False):
+    # Quando empacotado em .exe, o PyInstaller coloca arquivos extras em _MEIPASS
     base_path = sys._MEIPASS
 else:
-    base_path = os.path.dirname(__file__)
+    # Rodando normal no Python
+    base_path = os.getcwd()  # diretório de onde o terminal é executado
 
+# Caminho do .env
 env_path = os.path.join(base_path, ".env")
+
+# Carrega o .env
+if not os.path.exists(env_path):
+    raise FileNotFoundError(f".env não encontrado em: {env_path}")
 load_dotenv(dotenv_path=env_path)
 
 class Settings:
@@ -26,6 +32,3 @@ class Settings:
     MSSQL_DRIVER = os.getenv("MSSQL_DRIVER", "ODBC Driver 17 for SQL Server")
 
 settings = Settings()
-
-# DEBUG: mostrar variáveis para checar se estão corretas
-print("MSSQL_SERVER =", settings.MSSQL_SERVER)
