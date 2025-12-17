@@ -24,8 +24,9 @@ Este projeto foi desenvolvido para:
 ## ⚙️ Pré-requisitos
 
 Antes de executar o projeto, certifique-se de ter:
-Python 3.11+ instalado (para rodar via script).
-Todas as libs em 'requitements.txt'
+
+- Python 3.11+ instalado (para rodar via script).
+- Todas as libs em 'requirements.txt'.
 
 ---
 
@@ -50,10 +51,10 @@ O .exe será gerado na pasta dist/ e poderá ser executado diretamente no Window
 
 ## 🛠️ Observações
 
-Sempre mantenha o .env atualizado com as credenciais corretas.
-Sempre que fizer uma nova alteração no código, faça outro .exe
-Certifique-se de que a porta do SQL Server esteja aberta e que a conexão seja permitida.
-Para problemas de conexão (08001 ou 11001), verifique IP, porta e firewall.
+- Sempre mantenha o .env atualizado com as credenciais corretas.
+- Sempre que fizer uma nova alteração no código, faça outro .exe
+- Certifique-se de que a porta do SQL Server esteja aberta e que a conexão seja permitida.
+- Para problemas de conexão (08001 ou 11001), verifique IP, porta e firewall.
 
 
 
