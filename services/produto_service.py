@@ -1,3 +1,4 @@
+
 from repositories.produto_repository import (
     fetch_all_produtos,
     insert_produto,
